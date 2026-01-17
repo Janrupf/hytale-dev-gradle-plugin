@@ -158,6 +158,16 @@ public abstract class HytaleExtension {
                 return project.getLayout().getProjectDirectory().dir(file.getAbsolutePath());
             }
 
+            if (Os.isFamily(Os.FAMILY_UNIX)) {
+                // Flatpack fallback
+                var flatpakDataHome = Paths.get(userHome, ".var", "app", "com.hypixel.HytaleLauncher", "data");
+
+                file = flatpakDataHome.resolve(HYTALE_LATEST_GAME_PACKAGE_DIR).toFile();
+                if (file.isDirectory()) {
+                    return project.getLayout().getProjectDirectory().dir(file.getAbsolutePath());
+                }
+            }
+
             return null;
         });
     }
