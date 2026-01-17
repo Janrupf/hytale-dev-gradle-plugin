@@ -45,6 +45,11 @@ hytale {
         }
     }
 }
+
+dependencies {
+    compileOnly(hytaleServer()) // Make sure to use compileOnly!
+}
+
 ```
 
 You don't need to create a `manifest.json` file manually, the plugin will generate it for you based on the configuration
