@@ -127,7 +127,7 @@ public abstract class HytaleManifestModel {
         getOptionalDependencies().convention(Collections.emptyMap());
         getLoadBefore().convention(Collections.emptyMap());
         getDisabledByDefault().convention(false);
-        getIncludesAssetPack().convention(false);
+        getIncludesAssetPack().convention(true);
     }
 
     /**

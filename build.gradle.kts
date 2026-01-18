@@ -14,7 +14,7 @@ repositories {
 }
 
 tasks.processResources {
-    from(agentProject.tasks.jar.map { it.archiveFile }) {
+    from(agentProject.tasks.named("shadowJar")) {
         into("hytale-dev/agent")
         rename(".*", "agent.jar")
     }

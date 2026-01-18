@@ -69,7 +69,15 @@ public abstract class HytaleDevPlugin implements Plugin<Project> {
                 importedHytaleServerJar
         );
 
-        this.runGenerator = new RunGenerator(project, ideIntegration, agentConfiguration);
+        var mainSourceSet = project.getExtensions().getByType(SourceSetContainer.class).getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+        var mainProcessResourcesTask = project.getTasks().named(mainSourceSet.getProcessResourcesTaskName(), Copy.class, this::configureProcessResourcesTask);
+
+        this.runGenerator = new RunGenerator(
+                project,
+                ideIntegration,
+                project.getLayout().dir(mainProcessResourcesTask.map(Copy::getDestinationDir)),
+                agentConfiguration
+        );
 
         this.hytaleServerRepository = new HytaleServerRepository(project);
 
@@ -92,8 +100,6 @@ public abstract class HytaleDevPlugin implements Plugin<Project> {
 
         this.extension.getRuns().all(this.runGenerator::generate);
 
-        var mainSourceSet = project.getExtensions().getByType(SourceSetContainer.class).getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-        project.getTasks().named(mainSourceSet.getProcessResourcesTaskName(), Copy.class, this::configureProcessResourcesTask);
 
         project.afterEvaluate(this::afterEvaluate);
     }

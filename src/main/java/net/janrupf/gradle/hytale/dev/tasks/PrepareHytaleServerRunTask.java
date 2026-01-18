@@ -1,11 +1,9 @@
 package net.janrupf.gradle.hytale.dev.tasks;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.file.*;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 import org.gradle.work.DisableCachingByDefault;
 
@@ -33,6 +31,35 @@ public abstract class PrepareHytaleServerRunTask extends DefaultTask {
     @OutputFile
     public abstract RegularFileProperty getAgentConfigurationFile();
 
+    private final Property<FileSystemLocation> assetsRedirectSource;
+
+    @Internal
+    public Property<FileSystemLocation> getAssetsRedirectSource() {
+        return assetsRedirectSource;
+    }
+
+    private final Property<FileSystemLocation> assetsRedirectTarget;
+
+    @Internal
+    public Property<FileSystemLocation> getAssetsRedirectTarget() {
+        return assetsRedirectTarget;
+    }
+
+    @Input
+    public Provider<String> getAssetsRedirectSourcePath() {
+        return getAssetsRedirectSource().map((location) -> location.getAsFile().toPath().toAbsolutePath().toString());
+    }
+
+    @Input
+    public Provider<String> getAssetsRedirectTargetPath() {
+        return getAssetsRedirectTarget().map((location) -> location.getAsFile().toPath().toAbsolutePath().toString());
+    }
+
+    public PrepareHytaleServerRunTask() {
+        this.assetsRedirectSource = getProject().getObjects().property(FileSystemLocation.class);
+        this.assetsRedirectTarget = getProject().getObjects().property(FileSystemLocation.class);
+    }
+
     @TaskAction
     public void prepare() throws IOException {
         Files.createDirectories(getWorkingDirectory().get().getAsFile().toPath());
@@ -40,6 +67,14 @@ public abstract class PrepareHytaleServerRunTask extends DefaultTask {
         var properties = new Properties();
         properties.setProperty("classpath", encodeClasspath(getClasspath()));
         properties.setProperty("mainClassName", getMainClassName().get());
+
+        var assetsRedirectSource = getAssetsRedirectSourcePath();
+        var assetsRedirectTarget = getAssetsRedirectTargetPath();
+
+        if (assetsRedirectSource.isPresent() && assetsRedirectTarget.isPresent()) {
+            properties.setProperty("asset.redirect.source", assetsRedirectSource.get());
+            properties.setProperty("asset.redirect.target", assetsRedirectTarget.get());
+        }
 
         try (var writer = Files.newBufferedWriter(
                 getAgentConfigurationFile().get().getAsFile().toPath()

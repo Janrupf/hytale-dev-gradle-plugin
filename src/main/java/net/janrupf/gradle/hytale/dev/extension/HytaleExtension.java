@@ -36,7 +36,7 @@ public abstract class HytaleExtension {
      *
      * @return the assets ZIP file property
      */
-    public abstract RegularFileProperty getAssetsZip();
+    public abstract RegularFileProperty getHytaleAssetsZip();
 
     /**
      * Whether to enable decompiling the server JAR.
@@ -71,7 +71,7 @@ public abstract class HytaleExtension {
                         name,
                         project,
                         getServerJar(),
-                        getAssetsZip()
+                        getHytaleAssetsZip()
                 )
         );
 
@@ -85,7 +85,7 @@ public abstract class HytaleExtension {
 
         getServerJar().convention(defaultLatestGamePackageProvider.map(
                 (packageDir) -> packageDir.dir("Server").file("HytaleServer.jar")));
-        getAssetsZip().convention(defaultLatestGamePackageProvider.map(
+        getHytaleAssetsZip().convention(defaultLatestGamePackageProvider.map(
                 (packageDir) -> packageDir.file("Assets.zip")));
         getEnableDecompileServerJar().convention(true);
         getManifestModifiers().convention(Collections.emptyList());

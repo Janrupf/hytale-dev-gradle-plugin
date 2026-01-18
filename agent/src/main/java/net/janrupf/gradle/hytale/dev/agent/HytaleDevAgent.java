@@ -1,13 +1,16 @@
 package net.janrupf.gradle.hytale.dev.agent;
 
+import net.janrupf.gradle.hytale.dev.agent.loader.HytaleDevAgentClassloader;
+import net.janrupf.gradle.hytale.dev.agent.transforms.AssetModuleTransformer;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Properties;
@@ -24,6 +27,9 @@ public class HytaleDevAgent {
     // Additionally IntelliJ likes to route running through Gradle, which causes some functionality
     // to ceise to work. In order to force IDE's to run the application directly, we generate configurations
     // that launch the agent jar, which then performs the classpath setup and launches the actual main class.
+
+    private static Path assetRedirectSource;
+    private static Path assetRedirectTarget;
 
     public static void main(String[] args) throws Throwable /* Transparent pass through for wrapped exceptions */ {
         var configurationFile = System.getenv("HYTALE_DEV_AGENT_CONFIGURATION");
@@ -42,11 +48,17 @@ public class HytaleDevAgent {
         var urls = loadClassPath(properties.getProperty("classpath"));
         var mainClassName = properties.getProperty("mainClassName");
 
-        var delegatingClassLoader = new URLClassLoader(
+        if (properties.containsKey("asset.redirect.source") && properties.containsKey("asset.redirect.target")) {
+            assetRedirectSource = Paths.get(properties.getProperty("asset.redirect.source"));
+            assetRedirectTarget = Paths.get(properties.getProperty("asset.redirect.target"));
+        }
+
+        var delegatingClassLoader = new HytaleDevAgentClassloader(
                 "Hytale",
                 urls,
                 Thread.currentThread().getContextClassLoader()
         );
+        delegatingClassLoader.addTransformer(new AssetModuleTransformer());
 
         try {
             Thread.currentThread().setContextClassLoader(delegatingClassLoader);
@@ -86,5 +98,13 @@ public class HytaleDevAgent {
         }
 
         return urls;
+    }
+
+    public static Path getAssetRedirectSource() {
+        return assetRedirectSource;
+    }
+
+    public static Path getAssetRedirectTarget() {
+        return assetRedirectTarget;
     }
 }

@@ -5,10 +5,12 @@ import org.gradle.api.Named;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.Dependencies;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.jspecify.annotations.NonNull;
@@ -100,6 +102,13 @@ public abstract class HytaleRunModel implements Named, Dependencies {
      */
     public abstract Property<String> getIdeName();
 
+    /**
+     * The location of the plugin assets.
+     *
+     * @return the assets location property
+     */
+    public abstract Property<FileSystemLocation> getAssetsLocation();
+
     @Inject
     public HytaleRunModel(
             String name,
@@ -119,6 +128,7 @@ public abstract class HytaleRunModel implements Named, Dependencies {
         getMainClassName().convention(DEFAULT_MAIN_CLASS_NAME);
         getEnabled().convention(true);
         getIdeName().convention(NamingUtil.capitalizeFirstLetter(name));
+        getAssetsLocation().convention(findAssetsLocation());
     }
 
     /**
@@ -142,7 +152,7 @@ public abstract class HytaleRunModel implements Named, Dependencies {
     /**
      * Add an environment variable to the run configuration.
      *
-     * @param key the environment variable key
+     * @param key   the environment variable key
      * @param value the environment variable value
      */
     public void environment(String key, String value) {
@@ -164,22 +174,6 @@ public abstract class HytaleRunModel implements Named, Dependencies {
         out.add("--disable-sentry");
         out.add("--assets=" + getAssetsZip().getAsFile().get().getAbsolutePath());
 
-        var sourceSet = getSourceSet().getOrNull();
-        if (sourceSet != null) {
-            var builder = new StringBuilder();
-            for (var sourceDirectory : sourceSet.getAllSource().getSourceDirectories().getElements().get()) {
-                if (!builder.isEmpty()) {
-                    builder.append(',');
-                }
-
-                builder.append(sourceDirectory.getAsFile().getAbsolutePath());
-            }
-
-            if (!builder.isEmpty()) {
-                out.add("--mods=" + builder);
-            }
-        }
-
         return out;
     }
 
@@ -191,6 +185,23 @@ public abstract class HytaleRunModel implements Named, Dependencies {
         }
 
         return sourceSetContainer.findByName(SourceSet.MAIN_SOURCE_SET_NAME);
+    }
+
+    private Provider<FileSystemLocation> findAssetsLocation() {
+        return getSourceSet()
+                .flatMap(
+                        (sourceSet) -> sourceSet.getResources()
+                                .getSourceDirectories()
+                                .getElements()
+                ).map((dirs) -> {
+                    if (dirs.size() != 1) {
+                        throw new IllegalStateException(
+                                "Expected exactly one resource directory for Hytale assets, manually set hytale.assetsLocation property."
+                        );
+                    }
+
+                    return dirs.iterator().next();
+                });
     }
 
     private static void checkName(String name) {

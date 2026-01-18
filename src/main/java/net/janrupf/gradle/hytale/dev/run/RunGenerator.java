@@ -7,6 +7,7 @@ import net.janrupf.gradle.hytale.dev.ide.IdeIntegration;
 import net.janrupf.gradle.hytale.dev.tasks.PrepareHytaleServerRunTask;
 import net.janrupf.gradle.hytale.dev.util.NamingUtil;
 import org.gradle.api.Project;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
@@ -18,11 +19,18 @@ public class RunGenerator {
 
     private final Project project;
     private final IdeIntegration ideIntegration;
+    private final Provider<Directory> manifestDirectory;
     private final HytaleDevAgentConfiguration agentConfiguration;
 
-    public RunGenerator(Project project, IdeIntegration ideIntegration, HytaleDevAgentConfiguration agentConfiguration) {
+    public RunGenerator(
+            Project project,
+            IdeIntegration ideIntegration,
+            Provider<Directory> manifestDirectory,
+            HytaleDevAgentConfiguration agentConfiguration
+    ) {
         this.project = project;
         this.ideIntegration = ideIntegration;
+        this.manifestDirectory = manifestDirectory;
         this.agentConfiguration = agentConfiguration;
     }
 
@@ -42,6 +50,8 @@ public class RunGenerator {
                             agentConfiguration.getServerJar()
                     );
                     task.getMainClassName().set(model.getMainClassName());
+                    task.getAssetsRedirectSource().set(manifestDirectory);
+                    task.getAssetsRedirectTarget().set(model.getAssetsLocation());
                     task.setEnabled(model.getEnabled().get());
                 }
         );
