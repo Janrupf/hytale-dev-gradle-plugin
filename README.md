@@ -10,36 +10,13 @@ Early alpha software, expect bugs and incomplete features. Contributions are wel
 - Gradle 8.x or 9.x
 - Hytale installed (or manual path configuration)
 
-## Installation
-
-The plugin is not yet published to the Gradle Plugin Portal. Add JitPack to your plugin repositories:
-
-**settings.gradle.kts**
-```kotlin
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        maven {
-            url = uri("https://jitpack.io")
-        }
-    }
-
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == "net.janrupf.hytale-dev") {
-                useModule("com.github.Janrupf:hytale-dev-gradle-plugin:${requested.version}")
-            }
-        }
-    }
-}
-```
-
 ## Usage
 
 **build.gradle.kts**
 ```kotlin
 plugins {
-    id("net.janrupf.hytale-dev") version "<commit-hash-or-branch>"
+    // See latest version at https://plugins.gradle.org/plugin/net.janrupf.hytale-dev
+    id("net.janrupf.hytale-dev") version "0.1.0"
 }
 
 group = "com.example"
@@ -61,6 +38,45 @@ dependencies {
 ```
 
 The plugin generates `manifest.json` automatically based on the `manifest {}` configuration.
+
+
+If you want to install the plugin from source to test changes before they have been published to
+the Gradle Plugin Portal, you can use JitPack as a repository:
+
+<details>
+<summary>Installation from Jitpack</summary>
+
+**settings.gradle.kts**
+```kotlin
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            url = uri("https://jitpack.io")
+        }
+    }
+
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == "net.janrupf.hytale-dev") {
+                useModule("com.github.Janrupf:hytale-dev-gradle-plugin:${requested.version}")
+            }
+        }
+    }
+}
+```
+
+Then replace the plugin version in `build.gradle.kts` with the desired commit hash or branch name:
+
+```kotlin
+plugins {
+    id("net.janrupf.hytale-dev") version "<commit-hash-or-branch>"
+}
+```
+
+</details>
+
+
 
 ## Configuration Reference
 
