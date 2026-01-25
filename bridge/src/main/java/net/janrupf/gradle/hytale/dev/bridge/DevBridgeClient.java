@@ -64,7 +64,7 @@ public class DevBridgeClient extends WebSocketClient {
 
     @Override
     public void onMessage(String message) {
-        // Text messages not used - all communication is binary protobuf
+        LOGGER.at(Level.WARNING).log("Received unexpected text message: %s", message);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class DevBridgeClient extends WebSocketClient {
                 handleTranslateRequest(message.getTranslate());
                 break;
             default:
-                // Unknown message type
+                LOGGER.at(Level.WARNING).log("Received unknown IDE message type: %s", message.getPayloadCase());
                 break;
         }
     }

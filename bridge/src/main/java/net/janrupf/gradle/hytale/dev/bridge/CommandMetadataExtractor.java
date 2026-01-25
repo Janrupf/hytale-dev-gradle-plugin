@@ -135,11 +135,8 @@ public class CommandMetadataExtractor {
                 .setIsRequired(true);
 
         // Add examples from type
-        String[] examples = type.getExamples();
-        if (examples != null) {
-            for (String example : examples) {
-                builder.addExamples(example);
-            }
+        for (String example : type.getExamples()) {
+            builder.addExamples(example);
         }
 
         return builder.build();
@@ -159,11 +156,8 @@ public class CommandMetadataExtractor {
                 .setIsRequired(false);
 
         // Add examples from type
-        String[] examples = type.getExamples();
-        if (examples != null) {
-            for (String example : examples) {
-                builder.addExamples(example);
-            }
+        for (String example : type.getExamples()) {
+            builder.addExamples(example);
         }
 
         return builder.build();
