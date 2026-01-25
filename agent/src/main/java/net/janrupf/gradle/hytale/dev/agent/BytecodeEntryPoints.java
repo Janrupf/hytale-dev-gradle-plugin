@@ -17,4 +17,19 @@ public class BytecodeEntryPoints {
 
         return assetPackPath;
     }
+
+    @SuppressWarnings("unused") // called by transformed bytecode from transforms.BridgeInjectorTransformer
+    public static void initializeBridge() {
+        try {
+            Class<?> bootstrapper = Thread.currentThread()
+                    .getContextClassLoader()
+                    .loadClass("net.janrupf.gradle.hytale.dev.bridge.BridgeBootstrapper");
+            bootstrapper.getMethod("initialize").invoke(null);
+        } catch (ClassNotFoundException e) {
+            // Bridge not available, skip silently
+        } catch (Exception e) {
+            System.err.println("[HytaleDev] Failed to initialize bridge: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

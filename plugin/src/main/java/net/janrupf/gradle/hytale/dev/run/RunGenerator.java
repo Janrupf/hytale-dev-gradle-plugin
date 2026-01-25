@@ -52,6 +52,7 @@ public class RunGenerator {
                     task.getMainClassName().set(model.getMainClassName());
                     task.getAssetsRedirectSource().set(manifestDirectory);
                     task.getAssetsRedirectTarget().set(model.getAssetsLocation());
+                    task.getBridgeJar().set(agentConfiguration.getBridgeJar());
                     task.setEnabled(model.getEnabled().get());
                 }
         );

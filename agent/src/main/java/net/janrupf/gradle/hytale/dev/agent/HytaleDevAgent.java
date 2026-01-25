@@ -2,6 +2,7 @@ package net.janrupf.gradle.hytale.dev.agent;
 
 import net.janrupf.gradle.hytale.dev.agent.loader.HytaleDevAgentClassloader;
 import net.janrupf.gradle.hytale.dev.agent.transforms.AssetModuleTransformer;
+import net.janrupf.gradle.hytale.dev.agent.transforms.BridgeInjectorTransformer;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -12,6 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Properties;
 
@@ -45,7 +48,7 @@ public class HytaleDevAgent {
             throw new UncheckedIOException("Failed to read agent configuration file", e);
         }
 
-        var urls = loadClassPath(properties.getProperty("classpath"));
+        var urls = new ArrayList<>(Arrays.asList(loadClassPath(properties.getProperty("classpath"))));
         var mainClassName = properties.getProperty("mainClassName");
 
         if (properties.containsKey("asset.redirect.source") && properties.containsKey("asset.redirect.target")) {
@@ -53,12 +56,33 @@ public class HytaleDevAgent {
             assetRedirectTarget = Paths.get(properties.getProperty("asset.redirect.target"));
         }
 
+        // Load bridge JAR if specified
+        boolean bridgeEnabled = false;
+        if (properties.containsKey("bridge")) {
+            var bridgePath = Paths.get(properties.getProperty("bridge"));
+            if (Files.exists(bridgePath)) {
+                try {
+                    urls.add(bridgePath.toUri().toURL());
+                    bridgeEnabled = true;
+                } catch (IOException e) {
+                    System.err.println("[HytaleDev] Failed to add bridge JAR to classpath: " + e.getMessage());
+                }
+            } else {
+                System.err.println("[HytaleDev] Bridge JAR not found at: " + bridgePath);
+            }
+        }
+
         var delegatingClassLoader = new HytaleDevAgentClassloader(
                 "Hytale",
-                urls,
+                urls.toArray(new URL[0]),
                 Thread.currentThread().getContextClassLoader()
         );
         delegatingClassLoader.addTransformer(new AssetModuleTransformer());
+
+        // Only add bridge transformer if bridge JAR is available
+        if (bridgeEnabled) {
+            delegatingClassLoader.addTransformer(new BridgeInjectorTransformer());
+        }
 
         try {
             Thread.currentThread().setContextClassLoader(delegatingClassLoader);

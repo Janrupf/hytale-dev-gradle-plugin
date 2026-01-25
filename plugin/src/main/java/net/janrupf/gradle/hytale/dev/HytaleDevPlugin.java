@@ -7,6 +7,7 @@ import net.janrupf.gradle.hytale.dev.ide.IdeIntegration;
 import net.janrupf.gradle.hytale.dev.repository.HytaleServerRepository;
 import net.janrupf.gradle.hytale.dev.run.RunGenerator;
 import net.janrupf.gradle.hytale.dev.tasks.ExtractAgentTask;
+import net.janrupf.gradle.hytale.dev.tasks.ExtractBridgeTask;
 import net.janrupf.gradle.hytale.dev.tasks.GenerateHytaleManifestTask;
 import net.janrupf.gradle.hytale.dev.tasks.SingleFileCopyTask;
 import net.janrupf.gradle.hytale.dev.tasks.VineflowerDecompileTask;
@@ -47,8 +48,14 @@ public abstract class HytaleDevPlugin implements Plugin<Project> {
         this.ideIntegration = IdeIntegration.autoDetect(project);
         this.extension = project.getExtensions().create("hytale", HytaleExtension.class);
 
+        this.hytaleServerRepository = new HytaleServerRepository(project);
+
         var extractAgentTask = project.getTasks().register("extractAgent", ExtractAgentTask.class, (task) -> {
             task.getTargetFile().convention(project.getLayout().getBuildDirectory().file("hytale-dev/agent.jar"));
+        });
+
+        var extractBridgeTask = project.getTasks().register("extractBridge", ExtractBridgeTask.class, (task) -> {
+            task.getTargetFile().convention(project.getLayout().getBuildDirectory().file("hytale-dev/bridge.jar"));
         });
 
         var importHytaleServerJarTask = project.getTasks().register("importHytaleServerJar", SingleFileCopyTask.class, (task) -> {
@@ -66,7 +73,8 @@ public abstract class HytaleDevPlugin implements Plugin<Project> {
 
         this.agentConfiguration = new HytaleDevAgentConfiguration(
                 extractAgentTask.flatMap(ExtractAgentTask::getTargetFile),
-                importedHytaleServerJar
+                importedHytaleServerJar,
+                extractBridgeTask.flatMap(ExtractBridgeTask::getTargetFile)
         );
 
         var mainSourceSet = project.getExtensions().getByType(SourceSetContainer.class).getByName(SourceSet.MAIN_SOURCE_SET_NAME);
@@ -78,8 +86,6 @@ public abstract class HytaleDevPlugin implements Plugin<Project> {
                 project.getLayout().dir(mainProcessResourcesTask.map(Copy::getDestinationDir)),
                 agentConfiguration
         );
-
-        this.hytaleServerRepository = new HytaleServerRepository(project);
 
         var dependencies = project.getDependencies();
         this.vineflowerConfiguration = project.getConfigurations().detachedConfiguration(dependencies.create("org.vineflower:vineflower:1.11.2"));

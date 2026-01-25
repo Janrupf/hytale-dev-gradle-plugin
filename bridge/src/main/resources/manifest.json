@@ -1,0 +1,14 @@
+{
+    "Name": "hytale-dev-bridge",
+    "Group": "net.janrupf.gradle.hytale.dev",
+    "Version": "0.1.0",
+    "Main": "net.janrupf.gradle.hytale.dev.bridge.HytaleBridgePlugin",
+    "Description": "Development bridge for IntelliJ IDE integration",
+    "ServerVersion": "*",
+    "Authors": [],
+    "Dependencies": {},
+    "OptionalDependencies": {},
+    "LoadBefore": {},
+    "DisabledByDefault": false,
+    "IncludesAssetPack": false
+}

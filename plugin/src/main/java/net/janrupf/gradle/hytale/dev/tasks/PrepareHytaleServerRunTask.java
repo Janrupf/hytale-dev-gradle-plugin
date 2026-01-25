@@ -45,6 +45,13 @@ public abstract class PrepareHytaleServerRunTask extends DefaultTask {
         return assetsRedirectTarget;
     }
 
+    private final Property<FileSystemLocation> bridgeJar;
+
+    @Internal
+    public Property<FileSystemLocation> getBridgeJar() {
+        return bridgeJar;
+    }
+
     @Input
     public Provider<String> getAssetsRedirectSourcePath() {
         return getAssetsRedirectSource().map((location) -> location.getAsFile().toPath().toAbsolutePath().toString());
@@ -55,9 +62,16 @@ public abstract class PrepareHytaleServerRunTask extends DefaultTask {
         return getAssetsRedirectTarget().map((location) -> location.getAsFile().toPath().toAbsolutePath().toString());
     }
 
+    @Input
+    @Optional
+    public Provider<String> getBridgeJarPath() {
+        return getBridgeJar().map((location) -> location.getAsFile().toPath().toAbsolutePath().toString());
+    }
+
     public PrepareHytaleServerRunTask() {
         this.assetsRedirectSource = getProject().getObjects().property(FileSystemLocation.class);
         this.assetsRedirectTarget = getProject().getObjects().property(FileSystemLocation.class);
+        this.bridgeJar = getProject().getObjects().property(FileSystemLocation.class);
     }
 
     @TaskAction
@@ -74,6 +88,11 @@ public abstract class PrepareHytaleServerRunTask extends DefaultTask {
         if (assetsRedirectSource.isPresent() && assetsRedirectTarget.isPresent()) {
             properties.setProperty("asset.redirect.source", assetsRedirectSource.get());
             properties.setProperty("asset.redirect.target", assetsRedirectTarget.get());
+        }
+
+        var bridgeJarPath = getBridgeJarPath();
+        if (bridgeJarPath.isPresent()) {
+            properties.setProperty("bridge", bridgeJarPath.get());
         }
 
         try (var writer = Files.newBufferedWriter(

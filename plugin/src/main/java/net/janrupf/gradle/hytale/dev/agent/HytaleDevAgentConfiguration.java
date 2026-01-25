@@ -13,10 +13,16 @@ import java.util.Properties;
 public class HytaleDevAgentConfiguration {
     private final Provider<RegularFile> agentJar;
     private final Provider<RegularFile> serverJar;
+    private final Provider<RegularFile> bridgeJar;
 
-    public HytaleDevAgentConfiguration(Provider<RegularFile> agentJar, Provider<RegularFile> serverJar) {
+    public HytaleDevAgentConfiguration(
+            Provider<RegularFile> agentJar,
+            Provider<RegularFile> serverJar,
+            Provider<RegularFile> bridgeJar
+    ) {
         this.agentJar = agentJar;
         this.serverJar = serverJar;
+        this.bridgeJar = bridgeJar;
     }
 
     public Provider<RegularFile> getAgentJar() {
@@ -25,5 +31,9 @@ public class HytaleDevAgentConfiguration {
 
     public Provider<RegularFile> getServerJar() {
         return serverJar;
+    }
+
+    public Provider<RegularFile> getBridgeJar() {
+        return bridgeJar;
     }
 }

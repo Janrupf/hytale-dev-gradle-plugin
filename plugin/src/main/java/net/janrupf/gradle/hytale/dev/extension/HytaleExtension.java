@@ -1,6 +1,6 @@
 package net.janrupf.gradle.hytale.dev.extension;
 
-import org.apache.tools.ant.taskdefs.condition.Os;
+import net.janrupf.gradle.hytale.dev.util.HytaleInstallationFinder;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -11,6 +11,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -22,7 +23,6 @@ import java.util.Map;
  * Configures Hytale-specific settings and properties.
  */
 public abstract class HytaleExtension {
-    private static final String HYTALE_LATEST_GAME_PACKAGE_DIR = "Hytale/install/release/package/game/latest";
 
     /**
      * The Hytale server JAR file.
@@ -121,51 +121,19 @@ public abstract class HytaleExtension {
 
     private Provider<Directory> findDefaultLatestGamePackageDir() {
         return project.provider(() -> {
-            // Check for overrides
+            // Check for Gradle project property override first
             var gamePackageDir = project.getProperties().get("hytale.gamePackageDir");
             if (gamePackageDir != null) {
-                return project.getLayout().getProjectDirectory().dir(gamePackageDir.toString());
+                Path overridePath = Paths.get(gamePackageDir.toString());
+                if (Files.isDirectory(overridePath)) {
+                    return project.getLayout().getProjectDirectory().dir(overridePath.toAbsolutePath().toString());
+                }
             }
 
-            var userHome = System.getProperty("user.home");
-
-            Path dataHomePath;
-
-            if (Os.isFamily(Os.FAMILY_MAC)) {
-                dataHomePath = Paths.get(userHome, "Application Support");
-            } else if (Os.isFamily(Os.FAMILY_UNIX)) {
-                var dataHome = System.getenv("XDG_DATA_HOME");
-                if (dataHome == null || dataHome.isEmpty()) {
-                    dataHomePath = Paths.get(userHome, ".local", "share");
-                } else {
-                    dataHomePath = Paths.get(dataHome);
-                }
-            } else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                var appData = System.getenv("APPDATA");
-                if (appData != null && !appData.isEmpty()) {
-                    dataHomePath = Paths.get(appData);
-                } else {
-                    dataHomePath = Paths.get(userHome, "AppData");
-                }
-            } else {
-                // Fallback to user home
-                dataHomePath = Paths.get(userHome);
-            }
-
-            var file = dataHomePath.resolve(HYTALE_LATEST_GAME_PACKAGE_DIR).toFile();
-
-            if (file.isDirectory()) {
-                return project.getLayout().getProjectDirectory().dir(file.getAbsolutePath());
-            }
-
-            if (Os.isFamily(Os.FAMILY_UNIX)) {
-                // Flatpack fallback
-                var flatpakDataHome = Paths.get(userHome, ".var", "app", "com.hypixel.HytaleLauncher", "data");
-
-                file = flatpakDataHome.resolve(HYTALE_LATEST_GAME_PACKAGE_DIR).toFile();
-                if (file.isDirectory()) {
-                    return project.getLayout().getProjectDirectory().dir(file.getAbsolutePath());
-                }
+            // Use shared installation finder
+            Path foundPath = HytaleInstallationFinder.findGamePackageDir();
+            if (foundPath != null) {
+                return project.getLayout().getProjectDirectory().dir(foundPath.toAbsolutePath().toString());
             }
 
             return null;
