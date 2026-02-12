@@ -1,2 +1,4 @@
 jdk:
   - openjdk25
+install:
+  - ./gradlew :plugin:publishToMavenLocal -x test -x :bridge:build -x :bridge:assemble -x :bridge:compileJava

@@ -75,7 +75,7 @@ public abstract class HytaleExtension {
                 )
         );
 
-        this.runs.create("server");
+        this.runs.create("hytaleServer");
 
         configureDefaults();
     }
